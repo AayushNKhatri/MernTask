@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.IO Chat Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>🔌 Socket.IO Chat Tester</h2>
+
+  <label>Room ID:</label>
+  <input id="roomId" placeholder="Room ID" value="room1" />
+
+  <br />
+
+  <label>Your Username (from):</label>
+  <input id="username" placeholder="Your Username" value="alex" />
+
+  <br />
+
+  <label>To Username:</label>
+  <input id="toUser" placeholder="Send to..." value="some" />
+
+  <br />
+  <button onclick="joinRoom()">Join Room</button>
+
+  <br><br>
+
+  <input id="message" placeholder="Type your message..." oninput="notifyTyping()" />
+  <button onclick="sendMessage()">Send Message</button>
+
+  <h3>💬 Messages:</h3>
+  <div id="chat" style="border: 1px solid #ccc; padding: 10px; width: 400px; min-height: 200px;"></div>
+
+  <script>
+    const socket = io("http://localhost:3000");
+
+    socket.on("connect", () => {
+      console.log("✅ Connected to server:", socket.id);
+    });
+
+    function joinRoom() {
+      const roomId = document.getElementById("roomId").value;
+      const userId = document.getElementById("username").value;
+      socket.emit("join_room", { roomId, userId });
+    }
+
+function sendMessage() {
+  const roomId = document.getElementById("roomId").value;
+  const from = document.getElementById("username").value;
+  const to = document.getElementById("toUser").value;
+  const content = document.getElementById("message").value;
+
+  console.log("🔍 Sending message from:", from, "to:", to);  // 👈 log this
+
+  socket.emit("send_message", { roomId, from, to, content });
+  document.getElementById("message").value = "";
+}
+
+
+    function notifyTyping() {
+      const roomId = document.getElementById("roomId").value;
+      const userId = document.getElementById("username").value;
+      socket.emit("typing", { roomId, userId });
+    }
+
+    socket.on("receive_message", (data) => {
+      const chatBox = document.getElementById("chat");
+      const p = document.createElement("p");
+      p.textContent = `${data.from}: ${data.content} (${new Date(data.timestamp).toLocaleTimeString()})`;
+      chatBox.appendChild(p);
+    });
+
+    socket.on("user_typing", (data) => {
+      console.log(`✏️ ${data.userId} is typing...`);
+    });
+
+    socket.on("user_connected", (data) => {
+      console.log(`🔔 ${data.userId} joined the room`);
+    });
+
+    socket.on("message_error", (data) => {
+      console.error("❌ Error:", data.error);
+    });
+  </script>
+</body>
+</html>

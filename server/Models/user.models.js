@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password:{
+    type: String,
+    require:true,
+  },
   role: {
     type: String,
     enum: ["user", "agent", "admin"],
@@ -14,6 +18,11 @@ const userSchema = new mongoose.Schema({
   online: {
     type: Boolean,
     default: false,
+  },
+  assignedAgent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // Reference to another user (agent)
+    default: null,
   },
 }, { timestamps: true });
 

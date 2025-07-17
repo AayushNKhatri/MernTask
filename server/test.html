@@ -3,36 +3,51 @@
 <head>
   <title>Socket.IO Chat Test</title>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    #chat {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 400px;
+      min-height: 200px;
+      margin-top: 10px;
+    }
+    #statusPanel {
+      margin-top: 10px;
+      font-family: sans-serif;
+    }
+    .online {
+      color: green;
+    }
+    .offline {
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <h2>🔌 Socket.IO Chat Tester</h2>
 
   <label>Room ID:</label>
-  <input id="roomId" placeholder="Room ID" value="room1" />
-
-  <br />
+  <input id="roomId" placeholder="Room ID" value="room1" /><br />
 
   <label>Your Username (from):</label>
-  <input id="username" placeholder="Your Username" value="alex" />
-
-  <br />
+  <input id="username" placeholder="Your Username" value="alex" /><br />
 
   <label>To Username:</label>
-  <input id="toUser" placeholder="Send to..." value="some" />
+  <input id="toUser" placeholder="Send to..." value="some" /><br />
 
-  <br />
-  <button onclick="joinRoom()">Join Room</button>
-
-  <br><br>
+  <button onclick="joinRoom()">Join Room</button><br><br>
 
   <input id="message" placeholder="Type your message..." oninput="notifyTyping()" />
   <button onclick="sendMessage()">Send Message</button>
 
   <h3>💬 Messages:</h3>
-  <div id="chat" style="border: 1px solid #ccc; padding: 10px; width: 400px; min-height: 200px;"></div>
+  <div id="chat"></div>
+
+  <h3>🧑‍💻 User Status:</h3>
+  <div id="statusPanel"></div>
 
   <script>
-    const socket = io("http://localhost:3000");
+    const socket = io("http://localhost:3000"); // Replace with server if needed
 
     socket.on("connect", () => {
       console.log("✅ Connected to server:", socket.id);
@@ -44,18 +59,17 @@
       socket.emit("join_room", { roomId, userId });
     }
 
-function sendMessage() {
-  const roomId = document.getElementById("roomId").value;
-  const from = document.getElementById("username").value;
-  const to = document.getElementById("toUser").value;
-  const content = document.getElementById("message").value;
+    function sendMessage() {
+      const roomId = document.getElementById("roomId").value;
+      const from = document.getElementById("username").value;
+      const to = document.getElementById("toUser").value;
+      const content = document.getElementById("message").value;
 
-  console.log("🔍 Sending message from:", from, "to:", to);  // 👈 log this
+      console.log("🔍 Sending message from:", from, "to:", to);
 
-  socket.emit("send_message", { roomId, from, to, content });
-  document.getElementById("message").value = "";
-}
-
+      socket.emit("send_message", { roomId, from, to, content });
+      document.getElementById("message").value = "";
+    }
 
     function notifyTyping() {
       const roomId = document.getElementById("roomId").value;
@@ -80,6 +94,23 @@ function sendMessage() {
 
     socket.on("message_error", (data) => {
       console.error("❌ Error:", data.error);
+    });
+
+    // ✅ Online/Offline Status
+    socket.on("user_online", (data) => {
+      const panel = document.getElementById("statusPanel");
+      const div = document.createElement("div");
+      div.className = "online";
+      div.textContent = `🟢 ${data.username} is online`;
+      panel.appendChild(div);
+    });
+
+    socket.on("user_offline", (data) => {
+      const panel = document.getElementById("statusPanel");
+      const div = document.createElement("div");
+      div.className = "offline";
+      div.textContent = `🔴 ${data.username} went offline`;
+      panel.appendChild(div);
     });
   </script>
 </body>
